@@ -27,7 +27,7 @@ library(devtools)
 source_gist("4466237")
 #
 # Download data, which is stored as a csv file at github
-BCdata <- source_GitHubData("https://github.com/MonkmanMH/BC-election-2009/blob/master/BCelection2009data.csv")
+BCdata <- source_GitHubData("https://raw.githubusercontent.com/MonkmanMH/BC-election-2009/master/BCelection2009data.csv")
 # a quick look at the data
 head(BCdata)
 str(BCdata)
