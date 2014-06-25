@@ -1,29 +1,45 @@
 # VOTER DEMOGRAPHICS
 #
-# some background reading material
+# replicating the charts in the report 
+# "Who heads to the polls? Exploring the Demographics of Voters in British Columbia" (March 2010, BC Stats for Elections BC)
+# https://www.google.ca/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CB4QFjAA&url=http%3A%2F%2Fwww.elections.bc.ca%2Fdocs%2Fstats%2FWho-heads-to-the-polls.pdf&ei=yT6rU9y8JtHdoASUyoHoDQ&usg=AFQjCNFk_xgmEFMjih5Clxl6_hX4GN_Tug&sig2=buQET2cR23LaTFcwrOZeJA&bvm=bv.69837884,d.cGU
+#
+# some background reading material regarding back-to-back bar charts
 # http://www.r-bloggers.com/ggplot2-a-little-twist-on-back-to-back-bar-charts/
 # http://learnr.wordpress.com/2009/09/24/ggplot2-back-to-back-bar-charts/
 # http://svitsrv25.epfl.ch/R-doc/library/Hmisc/html/histbackback.html
 # 
 #
 # install necessary packages
+if (!require(ggplot2)) install.packages("ggplot2")
 library("ggplot2")
+if (!require(plyr)) install.packages("plyr")
 library("plyr")
+if (!require(reshape2)) install.packages("reshape2")
 library("reshape2")
+if (!require(vcd)) install.packages("vcd")
 library("vcd")
 #
+# Use the function source_GitHubData, which requires the package devtools
+if (!require(devtools)) install.packages("devtools")
+library(devtools)
+# The functions' gist ID is 4466237
+source_gist("4466237")
+#
+# Download data, which is stored as a csv file at github
+BCdata <- source_GitHubData("https://github.com/MonkmanMH/BC-election-2009/blob/master/BCelection2009data.csv")
+# a quick look at the data
+head(BCdata)
+str(BCdata)
+#
+#
+if (!require(wesanderson)) install.packages("wesanderson")
 library(wesanderson)
 # for more on the Wes Anderson colour palette:
 # https://github.com/karthik/wesanderson#wes-anderson-palettes
 # http://blog.revolutionanalytics.com/2014/03/give-your-r-charts-that-wes-anderson-style.html
 #
 #
-# set working directory
-setwd("I:/10_External Clients/Elections BC/1612 Exploring non-voters/2. voter demographics/report/graphics_R")
-#
-# read the source data
-BCdata <- read.csv("BCvoterdemog2009.csv", header=TRUE)
-str(BCdata)
 #
 #
 # PREPARE THE DATA
