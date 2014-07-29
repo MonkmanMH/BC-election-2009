@@ -64,6 +64,7 @@ p1 <- ggplot(BCdata_long, aes(x = AGE, y = value)) +
 p1 + facet_grid(vote09 ~ pattern)
 #
 #
+# ##############################################################
 #
 # BACK TO BACK PLOT -- STACKED BAR CHART / HISTOGRAM
 # http://docs.ggplot2.org/0.9.3.1/geom_bar.html
