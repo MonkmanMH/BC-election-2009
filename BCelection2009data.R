@@ -64,10 +64,22 @@ p1 <- ggplot(BCdata_long, aes(x = AGE, y = value)) +
 p1 + facet_grid(vote09 ~ pattern)
 #
 #
-# BACK TO BACK PLOT
+# BACK TO BACK PLOT -- STACKED BAR CHART / HISTOGRAM
 # http://learnr.wordpress.com/2009/09/24/ggplot2-back-to-back-bar-charts/
+# http://www.r-bloggers.com/ggplot2-a-little-twist-on-back-to-back-bar-charts/
+# http://www.r-bloggers.com/making-back-to-back-histograms/
+# http://stackoverflow.com/questions/7579995/facet-grid-of-back-to-back-histogram-failing
 #
+# core plot as object "p2"
 p2 <- ggplot(BCdata_long, aes(AGE)) + 
   geom_bar(subset = .(vote09 == "Vote"), aes(y = value, fill = pattern), stat = "identity") +
-  geom_bar(subset = .(vote09 == "NonVote"), aes(y = -value, fill = pattern), stat = "identity") +
-  xlab("Age group") + scale_y_continuous("Vote - NonVote")
+  geom_bar(subset = .(vote09 == "NonVote"), aes(y = -value, fill = pattern), stat = "identity")
+# add some tweaks
+p2 +
+  xlab("Age group") + scale_y_continuous("Non-Voters - Voters") +
+  geom_hline(yintercept = 0, colour = "grey90") +
+  scale_fill_brewer(palette="Blues") 
+#  scale_fill_manual(values = c("Vote" = "darkblue", "NonVote" = "red"))
+#
+# colours in ggplot2
+# http://stackoverflow.com/questions/12910218/set-specific-fill-colors-in-ggplot2-by-sign
