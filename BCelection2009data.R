@@ -64,22 +64,68 @@ p1 <- ggplot(BCdata_long, aes(x = AGE, y = value)) +
 p1 + facet_grid(vote09 ~ pattern)
 #
 #
+#
 # BACK TO BACK PLOT -- STACKED BAR CHART / HISTOGRAM
+# http://docs.ggplot2.org/0.9.3.1/geom_bar.html
 # http://learnr.wordpress.com/2009/09/24/ggplot2-back-to-back-bar-charts/
 # http://www.r-bloggers.com/ggplot2-a-little-twist-on-back-to-back-bar-charts/
 # http://www.r-bloggers.com/making-back-to-back-histograms/
 # http://stackoverflow.com/questions/7579995/facet-grid-of-back-to-back-histogram-failing
 #
+# -----
 # core plot as object "p2"
 p2 <- ggplot(BCdata_long, aes(AGE)) + 
-  geom_bar(subset = .(vote09 == "Vote"), aes(y = value, fill = pattern), stat = "identity") +
-  geom_bar(subset = .(vote09 == "NonVote"), aes(y = -value, fill = pattern), stat = "identity")
-# add some tweaks
+  geom_bar(subset = .(vote09 == "Vote"), aes(y = value, fill = variable), stat = "identity") +
+  geom_bar(subset = .(vote09 == "NonVote"), aes(y = -value, fill = variable), stat = "identity")
+p2
+#
+# a variant on object "p2" with the original colours
+# original colours:
+#   voters:
+#      Newly eligible  255-192-0    == FFC000
+#      Inconsistent    255-146-47   == FF922F
+#      Consistent      192-0-0      == C00000
+#   NonVoters:
+#      Newly eligible  0-0-0        == 000000
+#      Inconsistent    166-166-166  == A6A6A6
+#      Consistent      75-172-198   == AFAC66
+#
+# NOTE: the following does not work!  It is missing some of the variables --
+#       first thought was that they were overlapped, but using [position ="stacked"] didn't change anything
+#       Further debugging required
+p2a <- ggplot(BCdata_long, aes(AGE)) + 
+  geom_bar(subset = .(variable == "V.NewlyEligible"), aes(y = value, fill = "#FFC000"), postition = "stack", stat = "identity") +
+  geom_bar(subset = .(variable == "V.Inconsistent"), aes(y = value, fill = "#FF922F"), postition = "stack", stat = "identity") +
+  geom_bar(subset = .(variable == "V.Consistent"), aes(y = value, fill = "#C00000"), postition = "stack", stat = "identity") +
+  geom_bar(subset = .(variable == "NV.Consistent"), aes(y = -value, fill = "#000000"), postition = "stack", stat = "identity") +
+  geom_bar(subset = .(variable == "NV.Inconsistent"), aes(y = -value, fill = "#A6A6A6"), postition = "stack", stat = "identity") +
+  geom_bar(subset = .(variable == "NV.NewlyEligible"), aes(y = -value, fill = "#AFAC66"), postition = "stack", stat = "identity")
+p2a
+#
+#
+# add some tweaks to the orginal p2
 p2 +
   xlab("Age group") + scale_y_continuous("Non-Voters - Voters") +
+  geom_hline(yintercept = 0, colour = "white") +
+  scale_fill_brewer(palette="Blues") 
+#
+#
+# -----
+# like "p2" but with colour based on variable "pattern"
+p3 <- ggplot(BCdata_long, aes(AGE)) + 
+  geom_bar(subset = .(vote09 == "Vote"), aes(y = value, fill = pattern), stat = "identity") +
+  geom_bar(subset = .(vote09 == "NonVote"), aes(y = -value, fill = pattern), stat = "identity")
+p3
+# add some tweaks
+p3 +
+  xlab("Age group") + scale_y_continuous("Non-Voters - Voters") +
+  geom_hline(yintercept = 0, colour = "black") +
+  scale_fill_brewer(palette="Greys") 
+#
+# alternate colour scheme with ColorBrewer
+p3 +
   geom_hline(yintercept = 0, colour = "grey90") +
   scale_fill_brewer(palette="Blues") 
-#  scale_fill_manual(values = c("Vote" = "darkblue", "NonVote" = "red"))
 #
 # colours in ggplot2
 # http://stackoverflow.com/questions/12910218/set-specific-fill-colors-in-ggplot2-by-sign
