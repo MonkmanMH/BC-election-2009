@@ -33,15 +33,6 @@ head(BCdata)
 str(BCdata)
 #
 #
-if (!require(wesanderson)) install.packages("wesanderson")
-library(wesanderson)
-# for more on the Wes Anderson colour palette:
-# https://github.com/karthik/wesanderson#wes-anderson-palettes
-# http://blog.revolutionanalytics.com/2014/03/give-your-r-charts-that-wes-anderson-style.html
-#
-#
-#
-#
 # PREPARE THE DATA
 # reshape the data into "long" form from the existing "wide" layout
 BCdata_long <- melt(BCdata, id=c("AGE"))
@@ -80,7 +71,3 @@ p2 <- ggplot(BCdata_long, aes(AGE)) +
   geom_bar(subset = .(vote09 == "Vote"), aes(y = value, fill = pattern), stat = "identity") +
   geom_bar(subset = .(vote09 == "NonVote"), aes(y = -value, fill = pattern), stat = "identity") +
   xlab("Age group") + scale_y_continuous("Vote - NonVote")
-#
-# add some Wes Anderson "Grand Budapest Hotel" colour
-p2 + scale_fill_manual(values = wes.palette(4, "GrandBudapest")) 
-# 
