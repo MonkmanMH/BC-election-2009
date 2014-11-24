@@ -1,0 +1,212 @@
+---
+title: "BC Election 2009 - voting patterns"
+author: "Martin Monkman"
+date: "Sunday, November 23, 2014"
+output: html_document
+---
+# VOTER DEMOGRAPHICS
+
+Replicating the charts in the report 
+["Who heads to the polls? Exploring the Demographics of Voters in British Columbia" (March 2010, BC Stats for Elections BC)](https://www.google.ca/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CB4QFjAA&url=http%3A%2F%2Fwww.elections.bc.ca%2Fdocs%2Fstats%2FWho-heads-to-the-polls.pdf&ei=yT6rU9y8JtHdoASUyoHoDQ&usg=AFQjCNFk_xgmEFMjih5Clxl6_hX4GN_Tug&sig2=buQET2cR23LaTFcwrOZeJA&bvm=bv.69837884,d.cGU)
+
+#### Some background reading material regarding back-to-back bar charts
+http://www.r-bloggers.com/ggplot2-a-little-twist-on-back-to-back-bar-charts/
+http://learnr.wordpress.com/2009/09/24/ggplot2-back-to-back-bar-charts/
+http://svitsrv25.epfl.ch/R-doc/library/Hmisc/html/histbackback.html
+ 
+
+
+```{r include=FALSE}
+#
+# install necessary packages
+if (!require(ggplot2)) install.packages("ggplot2")
+library("ggplot2")
+if (!require(dplyr)) install.packages("dplyr")
+library("dplyr")
+if (!require(reshape2)) install.packages("reshape2")
+library("reshape2")
+if (!require(vcd)) install.packages("vcd")
+library("vcd")
+#
+# Use the function source_GitHubData, which requires the package devtools
+if (!require(devtools)) install.packages("devtools")
+library(devtools)
+# The functions' gist ID is 4466237
+source_gist("4466237")
+#
+# Download data, which is stored as a csv file at github
+BCdata <- source_GitHubData("https://raw.githubusercontent.com/MonkmanMH/BC-election-2009/master/BCelection2009data.csv")
+# a quick look at the data
+head(BCdata)
+str(BCdata)
+
+```
+#### Reshape and summarise the data
+
+First, take the "wide" table and convert it into "long" layout using the `melt` function.
+
+Second, create variables that describe the 2009 voting behaviour, and the consistency of the behaviour and status on the list. These are as follows:
+
+* consistent (on the list in 2001, 2005, and 2009 and exhibiting consistent voting behaviour), 
+
+* inconsistent -- on the list in all three years or (in rare cases) on the list in either 2001 and 2005, and exhibiting inconsistent voting behaviour, and 
+
+* newly eligible (appearing on the list for the first time in 2009).
+
+
+```{r echo=FALSE}
+
+
+BCdata_long <- melt(BCdata, id=c("AGE"))
+#
+# add a new variable "vote09" with 2009 voting behaviour ("NV..." are non-voters, "V..." are voters)
+BCdata_long$vote09 <- "Vote"
+BCdata_long$vote09[BCdata_long$variable == "NV.Consistent"] <- "NonVote"
+BCdata_long$vote09[BCdata_long$variable == "NV.Inconsistent"] <- "NonVote"
+BCdata_long$vote09[BCdata_long$variable == "NV.NewlyEligible"] <- "NonVote"
+# add a new variable "pattern" with 2001-2005-2009 voting pattern
+BCdata_long$pattern <- "Consistent"
+BCdata_long$pattern[BCdata_long$variable == "V.Inconsistent"] <- "Inconsistent"
+BCdata_long$pattern[BCdata_long$variable == "NV.Inconsistent"] <- "Inconsistent"
+BCdata_long$pattern[BCdata_long$variable == "V.NewlyEligible"] <- "NewlyEligible"
+BCdata_long$pattern[BCdata_long$variable == "NV.NewlyEligible"] <- "NewlyEligible"
+#
+head(BCdata_long)
+#
+```
+
+#### Summary Tables
+
+Now create summary tables of the data.
+
+The second is by the voting pattern "variable". We need both the sum of each voting pattern group and the relative requency of that group (i.e. the percentage of the total).  Note that this approach uses the `dplr` package.
+
+Some `dplyr` resources:
+* [Relative frequency with dplyr](http://stackoverflow.com/questions/24576515/relative-frequency-with-dplyr), 
+* [How dplyr replaced my most common R idioms](http://www.statsblogs.com/2014/02/10/how-dplyr-replaced-my-most-common-r-idioms/), 
+* [Hands-on dplyr tutorial for faster data manipulation in R](http://www.dataschool.io/dplyr-tutorial-for-faster-data-manipulation-in-r/),
+and 
+* [4 data wrangling tasks in R for advanced beginners](http://www.computerworld.com/article/2486425/business-intelligence-4-data-wrangling-tasks-in-r-for-advanced-beginners.html))
+
+Note: "totalall" needs to be set as.numeric in order to be used in subsequent `dplyr`
+code.  [This github issues page](https://github.com/hadley/dplyr/issues/390) seems to address this particular bug.
+
+
+```{r}
+
+# "totalall" is the number of voters on the list in 2009
+totalall <- BCdata_long %>%
+  summarise(totalall = sum(value))
+totalall <- as.numeric(totalall)
+
+
+# summarise the data by voting pattern "pattern"
+table_pattern <- BCdata_long %>%
+  group_by(pattern) %>%
+  summarise(total = sum(value)) %>%
+  mutate(pcnt = round(100 * (total / sum(total)), 1))
+table_pattern
+
+# summarise the data by voting behaviour "vote09"
+table_vote <- BCdata_long %>%
+  group_by(vote09) %>%
+  summarise(total = sum(value)) %>%
+  mutate(pcnt = round(100 * (total / sum(total)), 1))
+table_vote
+
+# summarise the data by voting pattern "pattern" and "vote09"
+table_votepattern <- BCdata_long %>%
+  group_by(vote09, pattern) %>%
+  summarise(pcnt = sum(value)) %>%
+  mutate(pcnt = round(100 * (pcnt / totalall), 1))
+table_votepattern
+
+
+```
+
+An alternate table, based on the original "variable" (which contains both voting and consistency information).
+
+```{r}
+
+# summarise the data by voting pattern "variable"
+plot2data <- BCdata_long %>%
+  group_by(variable) %>%
+  summarise(total = sum(value)) %>%
+  mutate(pcnt = round(100 * (total / sum(total)), 1))
+plot2data
+
+
+```
+### PLOTS
+
+#### Facet Plot, Voting Pattern by Age
+
+```{r}
+# base plot == total voter count (y = value) by age group (x)
+p1 <- ggplot(BCdata_long, aes(x = AGE, y = value)) + 
+  geom_bar(stat="identity") 
+# facet by pattern and vote 2009
+p1 + facet_grid(vote09 ~ pattern)
+#
+
+```
+
+#### Cleveland Dot Plots
+
+
+Simple plots, followed by the same plot with more elaborate formatting.
+
+```{r}
+
+# p2a = base plot with count
+p2a <- ggplot(plot2data, aes(x = total, y = variable)) + 
+  geom_point(size=3) 
+p2a
+
+# p2b = base plot with percentage ("freq")
+p2b <- ggplot(plot2data, aes(x = pcnt, y = variable)) + 
+  geom_point(size=3) 
+p2b
+
+# additional tweaks 
+p2 <- p2b # or p2a 
+p2 + 
+  theme_bw() +
+  xlim(0, 40) +
+  geom_segment(aes(yend=variable), xend=0, colour="grey50") +
+  theme(panel.grid.major.x = element_blank())
+#
+# sort, big to little
+
+p2c <- ggplot(plot2data, 
+              aes(x = pcnt, y = reorder(variable, pcnt))) + 
+  geom_point(size=3) 
+p2c
+p2 <- p2c
+
+p2 + 
+  theme_bw() +
+  xlim(0, 40) 
+
+# DOES NOT WORK
+p2 +
+  theme_bw() +
+  xlim(0, 40) +
+  geom_segment(aes(yend=pcnt), xend=0, colour="grey50") +
+  theme(panel.grid.major.x = element_blank()) 
+#
+
+p2 <- p2 + 
+  theme_bw() +
+  xlim(0, 40) +
+  geom_segment(aes(yend=pcnt), xend=0, colour="grey50") +
+  theme(panel.grid.major.x = element_blank()) 
+# facet by pattern and vote 2009
+p2 + facet_grid(vote09)
+
+
+```
+
+The end
+
+-30-
